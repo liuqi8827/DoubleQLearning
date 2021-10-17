@@ -112,8 +112,6 @@ class SingleDQN():
         
         # Set the max values of all states that will be done to 1
         max_values = torch.where(dones == 1, torch.zeros_like(max_values), max_values)
-        print(max_values)
-        exit()
         target = rewards + discount_factor * max_values
 
         return target

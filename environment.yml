@@ -19,3 +19,4 @@ dependencies:
   - pip:
     - gym==0.10.8
     - gym[atari]
+    - gym[legacy]

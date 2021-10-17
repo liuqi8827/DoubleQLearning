@@ -14,7 +14,7 @@ class DoubleQLearning(object):
         """
         A simple epsilon greedy policy.
         """
-        def __init__(self, Q_a, Q_b, epsilon):
+        def __init__(self, Q_a : dict, Q_b: dict, epsilon):
             self.Q_a = Q_a
             self.Q_b = Q_b
             self.epsilon = epsilon
@@ -29,7 +29,6 @@ class DoubleQLearning(object):
             Returns:
                 An action (int).
             """
-            
             action_values = self.Q_a[obs] + self.Q_b[obs]
 
             if (np.random.uniform(0, 1) <= self.epsilon):
@@ -39,7 +38,8 @@ class DoubleQLearning(object):
                             
             return action
 
-    def double_q_learning(env, policy, Q_a, Q_b, num_episodes, discount_factor=1.0, alpha=0.5):
+
+    def double_q_learning(env, policy, num_episodes, Q_a=None, Q_b=None, discount_factor=1.0, alpha=0.5, show_episodes=True):
         """
         Q-Learning algorithm: Off-policy TD control. Finds the optimal greedy policy
         while following an epsilon-greedy policy
@@ -60,12 +60,30 @@ class DoubleQLearning(object):
         
         # Keeps track of useful statistics
         stats = []
-        print(num_episodes)
-        for i_episode in tqdm(range(num_episodes)):
+        try:
+            num_actions = env.action_space.n
+        except AttributeError:
+            num_actions = env.nA
+            
+        if Q_a is None:
+            Q_a = policy.Q_a
+        else:
+            policy.Q_a = Q_a
+        
+        if Q_b is None:
+            Q_b = policy.Q_b
+        else:
+            policy.Q_b = Q_b
+
+        episode_range = tqdm(range(num_episodes)) if show_episodes else range(num_episodes)
+
+        for i_episode in episode_range:
             i = 0
             R = 0
             
             state = env.reset()
+            Q_a[state] = np.zeros(num_actions)
+            Q_b[state] = np.zeros(num_actions)
             
             while True:
                 
@@ -74,13 +92,13 @@ class DoubleQLearning(object):
                 next_state, reward, done, _ = transition
 
                 if np.random.randint(0, 2):
-                    max_action = np.argmax(Q_a[next_state])
-                    Q_a[state, action] = Q_a[state, action] + alpha * (reward + discount_factor * 
-                                                                Q_b[next_state, max_action] - Q_a[state, action])
+                    max_action = np.argmax(Q_a.setdefault(next_state, np.zeros(num_actions)))
+                    Q_a[state][action] = Q_a[state][action] + alpha * (reward + discount_factor * \
+                        Q_b.setdefault(next_state, np.zeros(num_actions))[max_action] - Q_a[state][action])
                 else:
-                    max_action = np.argmax(Q_b[next_state])
-                    Q_b[state, action] = Q_b[state, action] + alpha * (reward + discount_factor * 
-                                                                Q_a[next_state, max_action] - Q_b[state, action])
+                    max_action = np.argmax(Q_b.setdefault(next_state, np.zeros(num_actions)))
+                    Q_b[state][action] = Q_b[state][action] + alpha * (reward + discount_factor * \
+                        Q_a.setdefault(next_state, np.zeros(num_actions))[max_action] - Q_b[state][action])
                 
                 state = next_state
                 
@@ -92,4 +110,8 @@ class DoubleQLearning(object):
             
             stats.append((i, R))
         episode_lengths, episode_returns = zip(*stats)
-        return Q_a + Q_b, (episode_lengths, episode_returns)
+
+        Q = {}
+        for key in Q_a.keys():
+            Q[key] = Q_a[key] + Q_b[key]
+        return Q, (episode_lengths, episode_returns)

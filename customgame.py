@@ -23,7 +23,8 @@ class FirstGame(Env):
     """
 
     def __init__(self):
-        self.action_space = Discrete(2)
+        self.nA = 2
+        self.nS = 4
 
         self.transitions = {
             0: {0: (1, (0.6, 0.6), True), 1: (2, (0, 0), False)},
@@ -41,17 +42,18 @@ class FirstGame(Env):
     def step(self, action):
 
         if self.is_done:
-            return (self.s, 0, True)
+            return self.s, 0, True, 1.0
 
         next_state, reward, done = self.get_transition(action)
 
         self.s = next_state
         self.is_done = done
 
-        return next_state, reward, done
+        return next_state, reward, done, 1.0
 
     def reset(self):
         self.s = 0
+        self.is_done = False
 
         return self.s
 
@@ -63,4 +65,11 @@ game = FirstGame()
 
 # %%
 
+game.s
+
+
+# %%
+
 game.step(1)
+
+# %%

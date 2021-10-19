@@ -2,8 +2,11 @@ from collections import defaultdict
 from tqdm import tqdm as _tqdm
 import numpy as np
 
+
 def tqdm(*args, **kwargs):
-    return _tqdm(*args, **kwargs, mininterval=1)  # Safety, do not overflow buffer
+    # Safety, do not overflow buffer
+    return _tqdm(*args, **kwargs, mininterval=1)
+
 
 class QLearning(object):
 
@@ -27,21 +30,12 @@ class QLearning(object):
 
         return num_actions
 
-
     def sample_episode(self, env, policy):
         i = 0
         R = 0
         Q_a = policy.Q_a
         Q_b = policy.Q_b
         state = env.reset()
-        if isinstance(env.nA, list):
-            val = env.nA[state]
-        else:
-            val = env.nA
-
-        Q_a.setdefault(state,  self.new_val(val))
-        if Q_b:
-            Q_b.setdefault(state, self.new_val(val))
 
         done = False
 
@@ -58,7 +52,6 @@ class QLearning(object):
             i += 1
 
         return (i, R)
-
 
     def train(self, env, policy, num_episodes, discount_factor=1.0, alpha=0.5, show_episodes=True):
         """
@@ -86,19 +79,20 @@ class QLearning(object):
         self.discount_factor = discount_factor
         self.num_actions = self.get_num_actions(env)
 
-        episode_range = tqdm(range(num_episodes)) if show_episodes else range(num_episodes)
+        episode_range = tqdm(range(num_episodes)
+                             ) if show_episodes else range(num_episodes)
 
+        Q_values = []
         for i_episode in episode_range:
             i, R = self.sample_episode(env, policy)
             stats.append((i, R))
 
+            Q_values.append([policy.Q_a[0][0], policy.Q_a[0][1]])
         episode_lengths, episode_returns = zip(*stats)
 
         Q = self.final_Q(policy)
 
-        return Q, (episode_lengths, episode_returns)
-
-
+        return Q, (episode_lengths, episode_returns), Q_values
 
 
 class SingleQLearning(QLearning):
@@ -106,28 +100,21 @@ class SingleQLearning(QLearning):
     def __init__(self):
         super().__init__()
 
-
     def update_Q(self, policy, reward, state, next_state, action):
         Q = policy.Q_a
 
-        if isinstance(self.env.nA, list):
-            val = self.env.nA[state]
-        else:
-            val = self.env.nA
-
-        max_action = np.argmax(Q.setdefault(next_state, self.new_val(val)))
-        Q[state][action] = Q[state][action] + self.alpha * (reward + self.discount_factor * Q[next_state][max_action] - Q[state][action])
-
+        max_action = np.argmax(Q)
+        Q[state][action] = Q[state][action] + self.alpha * \
+            (reward + self.discount_factor *
+             Q[next_state][max_action] - Q[state][action])
 
     def final_Q(self, policy):
         return policy.Q_a
 
 
-
 class DoubleQLearning(QLearning):
     def __init__(self):
         super().__init__()
-
 
     def update_Q(self, policy, reward, state, next_state, action):
         Q_a = policy.Q_a
@@ -137,7 +124,6 @@ class DoubleQLearning(QLearning):
         else:
             self.update_double_Q(Q_b, Q_a, reward, state, next_state, action)
 
-
     def update_double_Q(self, Q_1, Q_2, reward, state, next_state, action):
         if isinstance(self.env.nA, list):
             val = self.env.nA[state]
@@ -145,7 +131,8 @@ class DoubleQLearning(QLearning):
             val = self.env.nA
         max_action = np.argmax(Q_1.setdefault(next_state, self.new_val(val)))
         Q_1[state][action] = Q_1.setdefault(state, self.new_val(val))[action] + self.alpha * \
-            (reward + self.discount_factor * Q_2.setdefault(next_state, self.new_val(val))[max_action] - Q_1[state][action])
+            (reward + self.discount_factor * Q_2.setdefault(next_state,
+             self.new_val(val))[max_action] - Q_1[state][action])
         return
 
     def final_Q(self, policy):

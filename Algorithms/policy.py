@@ -22,7 +22,6 @@ class EpsilonGreedyPolicy(object):
             An action (int).
         """
 
-        print(f"Q_a = {self.Q_a}")
         if self.Q_b:
             action_values = self.Q_a[obs] + self.Q_b[obs]
         else:

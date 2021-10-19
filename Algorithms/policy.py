@@ -3,7 +3,12 @@ import numpy as np
 
 class EpsilonGreedyPolicy(object):
     """
-    A simple epsilon greedy policy, using Q-values.
+    A simple epsilon greedy policy, using a table of Q-values.
+    args:
+        Q_a : numpy array of size(num_states, n_actions)
+        Q_b : Either a numpy array of size(num_states, n_actions) (for double Q-learning), 
+                or None (for Single Q_learning).
+        epsilon: the epsilon (float [0-1])
     """
 
     def __init__(self, epsilon, Q_a, Q_b=None):
@@ -35,7 +40,20 @@ class EpsilonGreedyPolicy(object):
 
 
     def sample_episode(self, env, update_func=None):
-        assert (env.nS, env.nA) == self.Q_a.shape, "Matrix dimensions do not align."
+        """
+        Samples an episode for a given env.
+        If update_func is provided, also updates the Q-values
+
+        Args:
+            env: The OpenAI environment to sample from
+            update_func: The update function for the Q-values
+
+        Returns:
+            i: the episode length
+            R: the episode return
+        """
+        
+        assert (env.nS, env.nA) == self.Q_a.shape, "Environment and Q-table dimensions do not align."
         i = 0
         R = 0
         state = env.reset()

@@ -1,6 +1,6 @@
 # %%
 
-from gridworld import GridworldEnv
+# from gridworld import GridworldEnv
 import numpy as np
 from gym import Env
 from gym.spaces import Discrete, Box
@@ -22,13 +22,13 @@ class FirstGame(Env):
     The reward is sampled from a uniform distribution between 0 and 1.
     """
 
-    def __init__(self):
-        self.nA = 2
+    def __init__(self, num_actions):
+        self.nA = [2, 1, num_actions, 1]
         self.nS = 4
 
         self.transitions = {
-            0: {0: (1, (0.6, 0.6), True), 1: (2, (0, 0), False)},
-            2: {0: (3, (0, 1), True), 1: (3, (0, 1), True)}}
+            0: {0: (1, (0.6, 0), True), 1: (2, (0, 0), False)},
+            2: {k: (3, (0.5, 1), True) for k in range(num_actions)}}
 
         self.s = 0
         self.is_done = False
@@ -37,7 +37,7 @@ class FirstGame(Env):
 
         next_state, bounds, done = self.transitions[self.s][action]
 
-        return next_state, np.random.uniform(bounds[0], bounds[1]), done
+        return next_state, np.random.normal(bounds[0], bounds[1]), done
 
     def step(self, action):
 
@@ -61,15 +61,12 @@ class FirstGame(Env):
 # %%
 
 
-game = FirstGame()
+game = FirstGame(100)
 
 # %%
 
-game.s
-
-
-# %%
-
-game.step(1)
+game.transitions
 
 # %%
+
+game.reset()

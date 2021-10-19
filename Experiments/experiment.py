@@ -1,5 +1,5 @@
-from Algorithms.single_q_learning import SingleQLearning
-from Algorithms.double_q_learning import DoubleQLearning
+from Algorithms.q_learning import SingleQLearning, DoubleQLearning
+from Algorithms.policy import EpsilonGreedyPolicy
 from typing import List
 import numpy as np
 from process_results import save_results
@@ -7,14 +7,15 @@ from plot import plot_results
 import os
 from tqdm import tqdm
 
+
 def running_mean(vals, n=1):
     cumvals = np.array(vals).cumsum()
     return (cumvals[n:] - cumvals[:-n]) / n
 
 
-def custom_experiment(env_name, env, params: dict, seeds : List[int], default_dir='Results'):
+def experiment(env_name, env, params: dict, seeds : List[int], default_dir='Results'):
     
-    print("Starting custom experiment")
+    print("Starting experiment")
     
     # Get results for test
     single_results, double_results = run_experiment(env, policy=None, seeds=seeds, params=params)
@@ -80,26 +81,28 @@ def single_run(env, policy=None, params : dict = None, show_episodes=False):
         
 def single_q(env, policy=None, epsilon=0.1, num_episodes=1000, discount_factor=1, alpha=0.1, show_episodes=False):
         
+    Q = {}
     if policy is None:
-        Q = {}
-        policy = SingleQLearning.EpsilonGreedyPolicy(Q, epsilon=epsilon)
+        policy = EpsilonGreedyPolicy
+
+    policy = policy(epsilon, Q)
 
     Q_values, (episode_lengths, episode_returns) = \
-        SingleQLearning.single_q_learning(env, policy, num_episodes, Q=None,\
-            discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
+        SingleQLearning.train(env, policy, num_episodes, discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
     return Q_values, (episode_lengths, episode_returns)
     
 
 def double_q(env, policy=None, epsilon=0.1, num_episodes=1000, discount_factor=1, alpha=0.1, show_episodes=False):
 
+    Q_a = {}
+    Q_b = {}
     if policy is None:
-        Q_a = {}
-        Q_b = {}
-        policy = DoubleQLearning.EpsilonGreedyPolicy(Q_a, Q_b, epsilon=epsilon)
+        policy = EpsilonGreedyPolicy
+        
+    policy = policy(epsilon, Q_a, Q_b)
 
     Q_values, (episode_lengths, episode_returns) = \
-        DoubleQLearning.double_q_learning(env, policy, num_episodes, Q_a=None, Q_b=None,\
-            discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
+        DoubleQLearning.train(env, policy, num_episodes, discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
     return  Q_values, (episode_lengths, episode_returns)
 
 

@@ -2,15 +2,10 @@ from Algorithms.q_learning import SingleQLearning, DoubleQLearning
 from Algorithms.policy import EpsilonGreedyPolicy
 from typing import List
 import numpy as np
-from Experiments.process_results import save_results
-from Experiments.plot import plot_results
+from Helper.process_results import save_results
+from Helper.plot import plot_results
 import os
 from tqdm import tqdm
-
-
-def running_mean(vals, n=1):
-    cumvals = np.array(vals).cumsum()
-    return (cumvals[n:] - cumvals[:-n]) / n
 
 
 def experiment(env_name, env, params: dict, seeds : List[int], default_dir='Results'):
@@ -18,19 +13,19 @@ def experiment(env_name, env, params: dict, seeds : List[int], default_dir='Resu
     """
     The full loop for an experiment. 
     Runs the experiment across multiple seeds, saves results, and plots them.
-
     Args:
         env_name: name of the current environment (string)
-        env: An OpenAI env
+        env: An OpenAI env. Must be initialized beforehand with EnvName() or gym.make("EnvName")
         params: a dict containing the parameters (with default values) 
             epsilon: 0.1, 
             num_episodes: (1000), 
             discount_factor: 1.0, 
             alpha : 0.1
         seeds: A list of ints, used as seeds for np.random.seed()
+        default_dir: the path to the directory all results will be saved in
 
     Returns: 
-        Episode Lengths, Episode Returns
+        
     """
 
 
@@ -50,8 +45,8 @@ def experiment(env_name, env, params: dict, seeds : List[int], default_dir='Resu
     # Plot results
     plot_results(single_results, double_results, save_dir=save_dir)
 
-    #Close environment to prevent issues
-    env.close()
+    #Close environment to prevent issues (only for OpenAI)
+    # env.close()
     print("\n\n")
     
     return
@@ -59,13 +54,21 @@ def experiment(env_name, env, params: dict, seeds : List[int], default_dir='Resu
 
 def run_experiment(env, seeds : List[int] = None, params : dict = None, show_episodes=False):
     """
-    Runs an experiment across multiple seeds
+    Runs an experiment for a single environment across multiple seeds
 
     args:
+        env: An OpenAI env
+        params: a dict containing the parameters (with default values) 
+            epsilon: 0.1, 
+            num_episodes: (1000), 
+            discount_factor: 1.0, 
+            alpha : 0.1
+        seeds: A list of ints, used as seeds for np.random.seed()
+        show_episodes: Whether to show a progress bar for each indiviual episode
 
 
     returns: 
-        Episode Lengths, Episode Returns
+        The Episode Lengths and Returns for both single and double q-learning
     """
 
     # If no seeds are provided, simply take the indices of the runs
@@ -92,10 +95,22 @@ def run_experiment(env, seeds : List[int] = None, params : dict = None, show_epi
 
 def single_run(env, params : dict = None, show_episodes=False):
     """
-    A single training run for a single env
+    Performs one run of single and double q-learning on an environment
 
-    returns: Episode Lengths, Episode Returns
+    args:
+        env: An OpenAI env
+        params: a dict containing the parameters (with default values) 
+            epsilon: 0.1, 
+            num_episodes: (1000), 
+            discount_factor: 1.0, 
+            alpha : 0.1
+        show_episodes: Whether to show a progress bar for each individual episode
+
+
+    returns: 
+        Episode Lengths and Returns for both single and double q-learning (2-tuple)
     """
+
     if params is None:
         params = {}
 
@@ -105,14 +120,12 @@ def single_run(env, params : dict = None, show_episodes=False):
     alpha = params.setdefault('alpha', 0.1)
     
 
-    # Obtain environment variables
+    # Obtain size of environment's observation and action space
     num_states = env.nS
     num_actions = env.nA
-
-    # For a single run, obtain all metrics and return
+   
+    # Single Q 
     Q = np.zeros((num_states, num_actions))
-
-    # Single Q
     single_policy = EpsilonGreedyPolicy(epsilon, Q)
     single_q = SingleQLearning()
     single_q_vals, single_q_results = \

@@ -2,8 +2,8 @@ from Algorithms.q_learning import SingleQLearning, DoubleQLearning
 from Algorithms.policy import EpsilonGreedyPolicy
 from typing import List
 import numpy as np
-from process_results import save_results
-from plot import plot_results
+from Experiments.process_results import save_results
+from Experiments.plot import plot_results
 import os
 from tqdm import tqdm
 
@@ -86,9 +86,9 @@ def single_q(env, policy=None, epsilon=0.1, num_episodes=1000, discount_factor=1
         policy = EpsilonGreedyPolicy
 
     policy = policy(epsilon, Q)
-
+    single_q = SingleQLearning()
     Q_values, (episode_lengths, episode_returns) = \
-        SingleQLearning.train(env, policy, num_episodes, discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
+       single_q.train(env, policy, num_episodes, discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
     return Q_values, (episode_lengths, episode_returns)
     
 
@@ -100,9 +100,9 @@ def double_q(env, policy=None, epsilon=0.1, num_episodes=1000, discount_factor=1
         policy = EpsilonGreedyPolicy
         
     policy = policy(epsilon, Q_a, Q_b)
-
+    double_q = DoubleQLearning()
     Q_values, (episode_lengths, episode_returns) = \
-        DoubleQLearning.train(env, policy, num_episodes, discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
+        double_q.train(env, policy, num_episodes, discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
     return  Q_values, (episode_lengths, episode_returns)
 
 

@@ -82,8 +82,8 @@ class DoubleQLearning(object):
             R = 0
             
             state = env.reset()
-            Q_a[state] = np.zeros(num_actions)
-            Q_b[state] = np.zeros(num_actions)
+            Q_a.setdefault(state, np.zeros(num_actions))
+            Q_b.setdefault(state, np.zeros(num_actions))
             
             while True:
                 

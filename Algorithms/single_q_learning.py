@@ -79,7 +79,7 @@ class SingleQLearning(object):
             R = 0
             
             state = env.reset()
-            Q[state] = np.zeros(num_actions)
+            Q.setdefault(state, np.zeros(num_actions))
             while True:
                 
                 action = policy.sample_action(state)

@@ -15,10 +15,29 @@ def running_mean(vals, n=1):
 
 def experiment(env_name, env, params: dict, seeds : List[int], default_dir='Results'):
     
+    """
+    The full loop for an experiment. 
+    Runs the experiment across multiple seeds, saves results, and plots them.
+
+    Args:
+        env_name: name of the current environment (string)
+        env: An OpenAI env
+        params: a dict containing the parameters (with default values) 
+            epsilon: 0.1, 
+            num_episodes: (1000), 
+            discount_factor: 1.0, 
+            alpha : 0.1
+        seeds: A list of ints, used as seeds for np.random.seed()
+
+    Returns: 
+        Episode Lengths, Episode Returns
+    """
+
+
     print("Starting experiment")
     
     # Get results for test
-    single_results, double_results = run_experiment(env, policy=None, seeds=seeds, params=params)
+    single_results, double_results = run_experiment(env, seeds=seeds, params=params)
 
     # Save Results to csv
     str_params = ''
@@ -38,8 +57,17 @@ def experiment(env_name, env, params: dict, seeds : List[int], default_dir='Resu
     return
 
 
-def run_experiment(env, policy=None, seeds : List[int] = None, params : dict = None, show_episodes=False):
-   
+def run_experiment(env, seeds : List[int] = None, params : dict = None, show_episodes=False):
+    """
+    Runs an experiment across multiple seeds
+
+    args:
+
+
+    returns: 
+        Episode Lengths, Episode Returns
+    """
+
     # If no seeds are provided, simply take the indices of the runs
     if seeds is None:
         seeds = [i for i in range(10)]
@@ -52,7 +80,7 @@ def run_experiment(env, policy=None, seeds : List[int] = None, params : dict = N
     
     for i in tqdm(seeds):
         np.random.seed(i)
-        single_result, double_result = single_run(env, policy=policy, params=params, show_episodes=show_episodes)
+        single_result, double_result = single_run(env, params=params, show_episodes=show_episodes)
         single_lengths.append(single_result[0])
         single_returns.append(single_result[1])
         double_lengths.append(double_result[0])
@@ -62,7 +90,12 @@ def run_experiment(env, policy=None, seeds : List[int] = None, params : dict = N
     return (single_lengths, single_returns), (double_lengths, double_returns)
 
 
-def single_run(env, policy=None, params : dict = None, show_episodes=False):
+def single_run(env, params : dict = None, show_episodes=False):
+    """
+    A single training run for a single env
+
+    returns: Episode Lengths, Episode Returns
+    """
     if params is None:
         params = {}
 
@@ -72,37 +105,18 @@ def single_run(env, policy=None, params : dict = None, show_episodes=False):
     alpha = params.setdefault('alpha', 0.1)
     
     # For a single run, obtain all metrics and return
-    single_q_vals, single_q_results = single_q(env, policy=policy, epsilon=epsilon, num_episodes=num_episodes, \
-        discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
-    double_q_vals, double_q_results = double_q(env, policy=policy, epsilon=epsilon, num_episodes=num_episodes, \
-        discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
-    return (single_q_results, double_q_results)
-
-        
-def single_q(env, policy=None, epsilon=0.1, num_episodes=1000, discount_factor=1, alpha=0.1, show_episodes=False):
-        
     Q = {}
-    if policy is None:
-        policy = EpsilonGreedyPolicy
-
-    policy = policy(epsilon, Q)
+    single_policy = EpsilonGreedyPolicy(epsilon, Q)
     single_q = SingleQLearning()
-    Q_values, (episode_lengths, episode_returns) = \
-       single_q.train(env, policy, num_episodes, discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
-    return Q_values, (episode_lengths, episode_returns)
-    
-
-def double_q(env, policy=None, epsilon=0.1, num_episodes=1000, discount_factor=1, alpha=0.1, show_episodes=False):
+    single_q_vals, single_q_results = \
+        single_q.train(env, single_policy, num_episodes, discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
 
     Q_a = {}
     Q_b = {}
-    if policy is None:
-        policy = EpsilonGreedyPolicy
-        
-    policy = policy(epsilon, Q_a, Q_b)
+    double_policy = EpsilonGreedyPolicy(epsilon, Q_a, Q_b)
     double_q = DoubleQLearning()
-    Q_values, (episode_lengths, episode_returns) = \
-        double_q.train(env, policy, num_episodes, discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
-    return  Q_values, (episode_lengths, episode_returns)
+    double_q_vals, double_q_results = \
+        double_q.train(env, double_policy, num_episodes, discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
 
+    return (single_q_results, double_q_results)
 

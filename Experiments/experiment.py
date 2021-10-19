@@ -104,15 +104,24 @@ def single_run(env, params : dict = None, show_episodes=False):
     discount_factor = params.setdefault('discount_factor', 1)
     alpha = params.setdefault('alpha', 0.1)
     
+
+    # Obtain environment variables
+    num_states = env.nS
+    num_actions = env.nA
+
     # For a single run, obtain all metrics and return
-    Q = {}
+    Q = np.zeros((num_states, num_actions))
+
+    # Single Q
     single_policy = EpsilonGreedyPolicy(epsilon, Q)
     single_q = SingleQLearning()
     single_q_vals, single_q_results = \
         single_q.train(env, single_policy, num_episodes, discount_factor=discount_factor, alpha=alpha, show_episodes=show_episodes)
 
-    Q_a = {}
-    Q_b = {}
+
+    # Double Q
+    Q_a = np.zeros((num_states, num_actions))
+    Q_b = np.zeros((num_states, num_actions))
     double_policy = EpsilonGreedyPolicy(epsilon, Q_a, Q_b)
     double_q = DoubleQLearning()
     double_q_vals, double_q_results = \

@@ -37,6 +37,16 @@ class ShowerEnv(Env):
         # Reduce shower length by 1 second
         self.shower_length -= 1
 
+        # Apply temperature noise
+        if self.stochastic:
+            self.state += random.randint(-1, 1)
+
+        if self.state < 0:
+            self.state = 0
+
+        if self.state > 100:
+            self.state = 100
+
         # Calculate reward
         if self.state >= 37 and self.state <= 39:
             reward = 1
@@ -48,18 +58,8 @@ class ShowerEnv(Env):
             done = True
         else:
             done = False
-
-        # Apply temperature noise
-        if self.stochastic:
-            self.state += random.randint(-1, 1)
         # Set placeholder for info
         info = {}
-
-        if self.state < 0:
-            self.state = 0
-
-        if self.state > 100:
-            self.state = 100
 
         # Return step information
         return self.state, reward, done, info

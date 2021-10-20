@@ -2,12 +2,11 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 # %%
 # Initial Values
-terminal_states = [2, 3]
-gamma = 1
-
+terminal_states = [1]
 
 # %%
 # Create Q
@@ -18,46 +17,66 @@ def is_terminal(state):
 
 
 def my_arg_max(actions):
-    arg_max = 0
+    arg_max = [0]
     value = actions[0]
-
-    no_best = True
 
     for i in range(1, len(actions)):
         if (actions[i]) > value:
-            no_best = False
             value = actions[i]
-            arg_max = i
+            arg_max = [i]
 
-        if (actions[i] < value):
-            no_best = False
+        if (actions[i] == value):
+            arg_max.append(i)
 
-    if no_best:
-        return np.random.choice(range(len(actions)))
-
-    return arg_max
+    return np.random.choice(arg_max)
 
 
 def initial_Q(possible_actions):
-    return [[0 for _ in possible_actions[i]] for i in range(4)]
+    return [[0 for _ in possible_actions[i]] for i in range(len(possible_actions))]
 
 
-def make_transition(state, action, std=1):
+def make_transition(state, action):
+    max_move = 10
+    if state == 0 and action == max_move:
+        return 0, 1
+
     if state == 0:
-        if action == 0:
-            return 0, 1
-        if action == 1:
-            return 0, 2
+        # return np.random.normal(-0.027, 1), 0
 
-    if state == 1:
-        return np.random.normal(-0.1, std), 3
+        throw = np.random.randint(0, max_move)
+
+        if throw == action:
+            return max_move-2, 0
+
+        return -1, 0
 
     # If a move is made from any other state, nothing happens
     return 0, state
 
 
+# loops = 10000
+# for a in range(10):
+#     reward = 0
+#     for i in range(loops):
+#         r, _ = make_transition(0, a)
+
+#         reward += r
+
+#     print(f"action: {a} => {reward/loops}")
+
+# %%
+
+# ints = {k: 0 for k in range(36)}
+# for i in range(10000):
+#     ints[np.random.randint(0, 36)] += 1
+
+# print(ints)
+
 # %%
 # Update Q-values
+
+gamma = 0.9
+
 
 class SingleQ():
 
@@ -128,8 +147,10 @@ def single_experiment(possible_actions, episodes, std=1, doubleQ=False):
     else:
         learner = SingleQ(initial_Q(possible_actions))
 
-    left_count = 0
-    left_counts = []
+    payout = 0
+    payouts = []
+
+    episode_lengths = []
 
     # number of states visited
     ns = [0 for _ in range(len(possible_actions))]
@@ -137,25 +158,27 @@ def single_experiment(possible_actions, episodes, std=1, doubleQ=False):
     nsa = [[0 for _ in possible_actions[state]]
            for state in range(len(possible_actions))]
 
-    for i in range(1, episodes+1):
+    for i in tqdm(range(1, episodes+1)):
         state = 0
+        moves_count = 0
 
         while True:
+            moves_count += 1
+
             # increment the state visits
             ns[state] += 1
 
             # determine the next action
             action = learner.sample_action(state, 1/np.sqrt(ns[state]))
 
-            # increment left actions
-            if state == 0 and action == 0:
-                left_count += 1
             # increment state-action visits
             nsa[state][action] += 1
 
             # make transition
-            reward, next_state = make_transition(state, action, std)
+            reward, next_state = make_transition(state, action)
+            # print(f"action: {action}, reward: {reward}")
 
+            payout += reward
             # determine alpha
             alpha = 1 / np.power(nsa[state][action], .8)
 
@@ -164,42 +187,53 @@ def single_experiment(possible_actions, episodes, std=1, doubleQ=False):
 
             # break if a terminal state is reached
             if is_terminal(next_state):
+                episode_lengths.append(moves_count)
                 break
 
             state = next_state
 
-        left_counts.append(left_count)
+        # print(f"Q at {i}: {learner.Q}")
+        payouts.append(payout)
 
-    return left_counts
+    return payouts, episode_lengths
 
 
 # %%
 
-def experiment(num_experiments=500, episodes=300, num_random_actions=5, std=1, doubleQ=False):
+def experiment(num_experiments=500, episodes=300, std=1, doubleQ=False):
     final_count = [0 for i in range(episodes)]
     final_res = [0 for i in range(episodes)]
+    final_t = [0 for i in range(episodes)]
 
-    possible_actions = [[0, 1], list(range(num_random_actions)), [0], [0]]
+    possible_actions = [list(range(11)), [0]]
+
+    first_count = []
 
     for i in range(num_experiments):
-        current_count = single_experiment(
+        current_count, current_t = single_experiment(
             possible_actions, episodes, std, doubleQ)
+
+        first_count.append(current_t[0])
+        # break
 
         for e in range(episodes):
             final_count[e] = (final_count[e] * i + current_count[e]) / (i+1)
             final_res[e] = final_count[e] / (e+1) * 100
 
-    return final_res
+            final_t[e] = (final_t[e] * i + current_t[e]) / (i+1)
+
+    return final_res, final_t
 
 
-num_random_actions = 5
-std = 1
-single_res = experiment(num_random_actions=num_random_actions, std=std)
-double_res = experiment(
-    num_random_actions=num_random_actions, std=std, doubleQ=True)
+num_experiments = 10
+episodes = 100
+single_res, single_t = experiment(
+    episodes=episodes, num_experiments=num_experiments)
+double_res, double_t = experiment(
+    episodes=episodes, num_experiments=num_experiments, doubleQ=True)
 
-plt.plot(range(len(single_res)), single_res, label="single")
-plt.plot(range(len(double_res)), double_res, label="double")
+plt.plot(range(len(single_res)), single_t, label="single")
+plt.plot(range(len(double_res)), double_t, label="double")
 plt.legend()
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
@@ -296,8 +330,5 @@ plt.show()
 
 # %%
 
-
-for i in range(10):
-    print(my_arg_max([1, 2, 0, 0]))
-
+(1/36 * 34) - (35/36 * 1)
 # %%

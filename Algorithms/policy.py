@@ -29,7 +29,7 @@ class EpsilonGreedyPolicy(object):
 
         action_values = self.Q_a[obs]
         if self.Q_b is not None:
-            action_values += self.Q_b[obs]
+            action_values = action_values + self.Q_b[obs]
 
         if (np.random.uniform(0, 1) <= self.epsilon):
             action = np.random.randint(0, len(action_values))

@@ -192,11 +192,12 @@ def experiment(num_experiments=500, episodes=300, num_random_actions=5, std=1, d
     return 100 * np.array(final_freq)
 
 
-num_random_actions = 5
-std = 1
-single_res = experiment(num_random_actions=num_random_actions, std=std)
-double_res = experiment(
-    num_random_actions=num_random_actions, std=std, doubleQ=True)
+num_random_actions = 1
+std = 0
+single_res = experiment(
+    episodes=50, num_random_actions=num_random_actions, std=std)
+double_res = experiment(episodes=50,
+                        num_random_actions=num_random_actions, std=std, doubleQ=True)
 
 
 # %%
@@ -215,6 +216,9 @@ plt.fill_between(range(len(single_res[0])), m-s, m+s, alpha=0.25)
 plt.legend()
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
+
+plt.savefig("Results/single_better.png")
+plt.show()
 
 # %%
 

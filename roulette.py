@@ -225,11 +225,6 @@ double_res = experiment(
 
 # %%
 
-print(single_res.mean(axis=0))
-
-print(double_res.mean(axis=0))
-
-
 m = single_res.mean(axis=0)
 s = single_res.std(axis=0)/2
 
@@ -242,12 +237,15 @@ plt.plot(range(len(double_res[0])), m, label="double")
 plt.fill_between(range(len(single_res[0])), m-s, m+s, alpha=0.25)
 
 plt.legend(bbox_to_anchor=(1.3, 1.0))
-plt.tight_layout()
 
-plt.savefig("Results/roulette.png")
 plt.xlabel("episodes")
-plt.ylabel("percentage left")
+plt.ylabel("expected profit")
 
+plt.tight_layout()
+plt.savefig("Results/roulette.png")
+
+
+# %%
 
 # %%
 

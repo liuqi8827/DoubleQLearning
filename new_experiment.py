@@ -184,6 +184,7 @@ def experiment(num_experiments=500, episodes=300, num_random_actions=5, std=1, d
         for e in range(episodes):
             final_count[e] = (final_count[e] * i + current_count[e]) / (i+1)
             final_res[e] = final_count[e] / (e+1) * 100
+        break
 
     return final_res
 
@@ -214,10 +215,11 @@ for n in [1, 3, 5, 10, 20, 50, 100]:
 
     plt.plot(range(len(res)), res, label=n)
 
-plt.legend(bbox_to_anchor=(1.2, 1.0))
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
 plt.ylim([0, 100])
+plt.legend(bbox_to_anchor=(1.2, 1.0))
+plt.tight_layout()
 
 plt.savefig("Results/actions_single.png")
 plt.show()
@@ -236,6 +238,8 @@ plt.xlabel("episodes")
 plt.ylabel("percentage left")
 
 plt.ylim([0, 100])
+plt.legend(bbox_to_anchor=(1.2, 1.0))
+plt.tight_layout()
 
 plt.savefig("Results/actions_double.png")
 plt.show()
@@ -257,7 +261,8 @@ plt.legend()
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
 plt.ylim([0, 100])
-
+plt.legend(bbox_to_anchor=(1.2, 1.0))
+plt.tight_layout()
 
 plt.savefig("Results/std_single.png")
 plt.show()
@@ -279,6 +284,8 @@ plt.legend()
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
 plt.ylim([0, 100])
+plt.legend(bbox_to_anchor=(1.2, 1.0))
+plt.tight_layout()
 
 plt.savefig("Results/std_double.png")
 plt.show()

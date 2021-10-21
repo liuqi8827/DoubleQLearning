@@ -184,7 +184,6 @@ def experiment(num_experiments=500, episodes=300, num_random_actions=5, std=1, d
         for e in range(episodes):
             final_count[e] = (final_count[e] * i + current_count[e]) / (i+1)
             final_res[e] = final_count[e] / (e+1) * 100
-        break
 
     return final_res
 

@@ -74,7 +74,7 @@ class CliffWalkingEnv(discrete.DiscreteEnv):
 
     def _wind(self):
         winds = ([-1, 0], [0, 1], [1, 0], [0, -1])
-        if np.random.random() < self.wind_chance:
+        if np.random.random() <= self.wind_chance:
             direction = np.random.randint(4)
             wind = winds[direction]
         else:

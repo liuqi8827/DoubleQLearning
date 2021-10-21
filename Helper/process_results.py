@@ -2,6 +2,13 @@ import numpy as np
 import os
 import csv
 
+
+
+def running_mean(vals, n=1):
+    cumvals = np.array(vals).cumsum()
+    return (cumvals[n:] - cumvals[:-n]) / n
+
+
 def process_results(results):
     lengths = np.array(results[0])
     mean_lengths, std_lengths = get_stats(lengths)

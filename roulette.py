@@ -191,10 +191,11 @@ def experiment(num_experiments=500, episodes=300, std=1, doubleQ=False):
     final_res = [0 for i in range(episodes)]
     final_t = [0 for i in range(episodes)]
 
+    final_res = []
+
     possible_actions = [list(range(37)), [0]]
 
     first_count = []
-    total_average_q = []
 
     for i in range(num_experiments):
         np.random.seed(i)
@@ -203,27 +204,55 @@ def experiment(num_experiments=500, episodes=300, std=1, doubleQ=False):
             possible_actions, episodes, std, doubleQ)
 
         first_count.append(current_t[0])
-        total_average_q.append(np.array(average_q))
+        final_res.append(np.array(average_q))
 
-        for e in range(episodes):
-            final_count[e] = (final_count[e] * i + current_count[e]) / (i+1)
-            final_res[e] = final_count[e] / (e+1) * 100
+        # for e in range(episodes):
+        #     final_count[e] = (final_count[e] * i + current_count[e]) / (i+1)
+        #     final_res[e] = final_count[e] / (e+1) * 100
 
-            final_t[e] = (final_t[e] * i + current_t[e]) / (i+1)
+        #     final_t[e] = (final_t[e] * i + current_t[e]) / (i+1)
 
-    total_average_q = np.mean(np.array(total_average_q), axis=0)
-    return final_res, final_t, total_average_q
+    # total_average_q = np.mean(np.array(total_average_q), axis=0)
+    return np.array(final_res)
 
 
 num_experiments = 20
-episodes = 10
-single_res, single_t, single_average_q = experiment(
+episodes = 100
+single_res = experiment(
     episodes=episodes, num_experiments=num_experiments)
-double_res, double_t, double_average_q = experiment(
+double_res = experiment(
     episodes=episodes, num_experiments=num_experiments, doubleQ=True)
 
-plt.plot(range(len(single_res)), single_average_q, label="single")
-plt.plot(range(len(double_res)), double_average_q, label="double")
+# %%
+
+print(single_res.mean(axis=0))
+
+print(double_res.mean(axis=0))
+
+
+m = single_res.mean(axis=0)
+s = single_res.std(axis=0)/2
+
+plt.plot(range(len(single_res[0])), m, label="single")
+plt.fill_between(range(len(single_res[0])), m-s, m+s, alpha=0.25)
+
+m = double_res.mean(axis=0)
+s = double_res.std(axis=0)
+plt.plot(range(len(double_res[0])), m, label="double")
+plt.fill_between(range(len(single_res[0])), m-s, m+s, alpha=0.25)
+
+plt.legend(bbox_to_anchor=(1.3, 1.0))
+plt.tight_layout()
+
+plt.savefig("Results/roulette.png")
+plt.xlabel("episodes")
+plt.ylabel("percentage left")
+
+
+# %%
+
+plt.plot(range(len(single_res)), single_res, label="single")
+plt.plot(range(len(double_res)), double_res, label="double")
 
 plt.legend(bbox_to_anchor=(1.3, 1.0))
 plt.tight_layout()

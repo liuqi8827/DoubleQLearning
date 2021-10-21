@@ -7,6 +7,7 @@ from tqdm import tqdm
 # %%
 # Initial Values
 terminal_states = [1]
+gamma = 0.95
 
 # %%
 # Create Q
@@ -14,6 +15,7 @@ terminal_states = [1]
 
 def is_terminal(state):
     return state in terminal_states
+
 
 def my_arg_max(actions):
     arg_max = [0]
@@ -29,8 +31,10 @@ def my_arg_max(actions):
 
     return np.random.choice(arg_max)
 
+
 def initial_Q(possible_actions):
     return [[0 for _ in possible_actions[i]] for i in range(len(possible_actions))]
+
 
 def make_transition(state, action):
     max_move = 36
@@ -51,19 +55,9 @@ def make_transition(state, action):
     # If a move is made from any other state, nothing happens
     return 0, state
 
-
-# %%
-
-# ints = {k: 0 for k in range(36)}
-# for i in range(10000):
-#     ints[np.random.randint(0, 36)] += 1
-
-# print(ints)
-
 # %%
 # Update Q-values
 
-gamma = 0.95
 
 class SingleQ():
 
@@ -90,6 +84,7 @@ class SingleQ():
             (reward + gamma * next_value - self.Q[state][action])
 
 # %%
+
 
 class DoubleQ():
 
@@ -171,14 +166,14 @@ def single_experiment(possible_actions, episodes, std=1, doubleQ=False):
 
             # update Q-value
             learner.updateQ(state, action, reward, next_state, alpha)
-                  
+
             # break if a terminal state is reached
             if is_terminal(next_state):
                 episode_lengths.append(moves_count)
                 break
 
             state = next_state
-    
+
         # print(f"Q at {i}: {learner.Q}")
         payouts.append(payout)
         if doubleQ:
@@ -202,12 +197,13 @@ def experiment(num_experiments=500, episodes=300, std=1, doubleQ=False):
     total_average_q = []
 
     for i in range(num_experiments):
+        np.random.seed(i)
+        print(f"Starting exerperiment: {i}")
         current_count, current_t, average_q = single_experiment(
             possible_actions, episodes, std, doubleQ)
 
         first_count.append(current_t[0])
         total_average_q.append(np.array(average_q))
-        # break
 
         for e in range(episodes):
             final_count[e] = (final_count[e] * i + current_count[e]) / (i+1)
@@ -218,11 +214,11 @@ def experiment(num_experiments=500, episodes=300, std=1, doubleQ=False):
     return final_res, final_t, total_average_q
 
 
-num_experiments = 1
-episodes = 1000
+num_experiments = 20
+episodes = 100
 single_res, single_t, single_average_q = experiment(
     episodes=episodes, num_experiments=num_experiments)
-double_res, double_t, double_average_q= experiment(
+double_res, double_t, double_average_q = experiment(
     episodes=episodes, num_experiments=num_experiments, doubleQ=True)
 
 plt.plot(range(len(single_res)), single_average_q, label="single")
@@ -230,98 +226,3 @@ plt.plot(range(len(double_res)), double_average_q, label="double")
 plt.legend()
 plt.xlabel("episodes")
 plt.ylabel("expected profit")
-
-# %%
-
-# variables to change: std, number of actions
-
-# Experiment 1: number of actions
-
-# single
-
-for n in [1, 2, 3, 4, 5, 10, 20, 50, 100]:
-
-    res = experiment(num_random_actions=n)
-
-    plt.plot(range(len(res)), res, label=n)
-
-plt.legend()
-plt.xlabel("episodes")
-plt.ylabel("percentage left")
-
-plt.show()
-# %%
-# double
-
-for n in [1, 2, 3, 4, 5, 10, 20, 50, 100]:
-
-    res = experiment(num_random_actions=n, doubleQ=True)
-
-    plt.plot(range(len(res)), res, label=n)
-
-plt.legend()
-plt.xlabel("episodes")
-plt.ylabel("percentage left")
-
-plt.show()
-# %%
-
-# variables to change: std, number of actions
-
-# Experiment 2: std
-
-# single
-
-for s in [0, 0.5, 1, 2, 3, 10]:
-
-    res = experiment(std=s)
-
-    plt.plot(range(len(res)), res, label=s)
-
-plt.legend()
-plt.xlabel("episodes")
-plt.ylabel("percentage left")
-
-plt.show()
-# %%
-
-# variables to change: std, number of actions
-
-# Experiment 2: std
-
-# double
-
-for s in [0, 0.5, 1, 2, 3]:
-
-    res = experiment(std=s, doubleQ=True)
-
-    plt.plot(range(len(res)), res, label=s)
-
-plt.legend()
-plt.xlabel("episodes")
-plt.ylabel("percentage left")
-
-plt.show()
-# %%
-
-# Image David
-
-
-res = experiment(std=0)
-plt.plot(range(len(res)), res, label="deterministic")
-
-
-res = experiment(std=1)
-plt.plot(range(len(res)), res, label="stochastic")
-
-
-plt.legend()
-plt.xlabel("episodes")
-plt.ylabel("percentage left")
-
-plt.show()
-
-# %%
-
-(1/36 * 34) - (35/36 * 1)
-# %%

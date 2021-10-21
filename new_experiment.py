@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 # %%
 # Initial Values
 terminal_states = [2, 3]
-gamma = 1
+gamma = 0.95
 
 
 # %%
@@ -18,24 +18,18 @@ def is_terminal(state):
 
 
 def my_arg_max(actions):
-    arg_max = 0
+    arg_max = [0]
     value = actions[0]
-
-    no_best = True
 
     for i in range(1, len(actions)):
         if (actions[i]) > value:
-            no_best = False
             value = actions[i]
-            arg_max = i
+            arg_max = [i]
 
-        if (actions[i] < value):
-            no_best = False
+        if (actions[i] == value):
+            arg_max.append(i)
 
-    if no_best:
-        return np.random.choice(range(len(actions)))
-
-    return arg_max
+    return np.random.choice(arg_max)
 
 
 def initial_Q(possible_actions):
@@ -182,6 +176,8 @@ def experiment(num_experiments=500, episodes=300, num_random_actions=5, std=1, d
     possible_actions = [[0, 1], list(range(num_random_actions)), [0], [0]]
 
     for i in range(num_experiments):
+        np.random.seed(i)
+
         current_count = single_experiment(
             possible_actions, episodes, std, doubleQ)
 
@@ -212,21 +208,24 @@ plt.ylabel("percentage left")
 
 # single
 
-for n in [1, 2, 3, 4, 5, 10, 20, 50, 100]:
+for n in [1, 3, 5, 10, 20, 50, 100]:
 
     res = experiment(num_random_actions=n)
 
     plt.plot(range(len(res)), res, label=n)
 
-plt.legend()
+plt.legend(bbox_to_anchor=(1.2, 1.0))
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
+plt.ylim([0, 100])
 
+plt.savefig("Results/actions_single.png")
 plt.show()
+
 # %%
 # double
 
-for n in [1, 2, 3, 4, 5, 10, 20, 50, 100]:
+for n in [1, 3, 5, 10, 20, 50, 100]:
 
     res = experiment(num_random_actions=n, doubleQ=True)
 
@@ -236,6 +235,9 @@ plt.legend()
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
 
+plt.ylim([0, 100])
+
+plt.savefig("Results/actions_double.png")
 plt.show()
 # %%
 
@@ -245,7 +247,7 @@ plt.show()
 
 # single
 
-for s in [0, 0.5, 1, 2, 3, 10]:
+for s in [0, 0.5, 1, 2, 3, 5, 10]:
 
     res = experiment(std=s)
 
@@ -254,7 +256,10 @@ for s in [0, 0.5, 1, 2, 3, 10]:
 plt.legend()
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
+plt.ylim([0, 100])
 
+
+plt.savefig("Results/std_single.png")
 plt.show()
 # %%
 
@@ -264,7 +269,7 @@ plt.show()
 
 # double
 
-for s in [0, 0.5, 1, 2, 3]:
+for s in [0, 0.5, 1, 2, 3, 5, 10]:
 
     res = experiment(std=s, doubleQ=True)
 
@@ -273,7 +278,9 @@ for s in [0, 0.5, 1, 2, 3]:
 plt.legend()
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
+plt.ylim([0, 100])
 
+plt.savefig("Results/std_double.png")
 plt.show()
 # %%
 

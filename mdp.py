@@ -245,11 +245,10 @@ for i in range(len(means)):
     plt.plot(range(len(m)), m, label=tests[i], linewidth=2)
     plt.fill_between(range(len(m)), m-s, m+s, alpha=0.2)
 
+plt.legend(bbox_to_anchor=(1.2, 1.0))
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
 plt.ylim([0, 100])
-plt.legend(bbox_to_anchor=(1.2, 1.0))
-plt.tight_layout()
 
 plt.savefig("Results/actions_single.png")
 plt.show()
@@ -285,8 +284,6 @@ for i in range(len(means)):
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
 plt.ylim([0, 100])
-plt.legend(bbox_to_anchor=(1.2, 1.0))
-plt.tight_layout()
 
 plt.savefig("Results/actions_double.png")
 plt.show()
@@ -324,8 +321,7 @@ for i in range(len(means)):
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
 plt.ylim([0, 100])
-plt.legend(bbox_to_anchor=(1.2, 1.0))
-plt.tight_layout()
+
 
 plt.savefig("Results/std_single.png")
 plt.show()
@@ -362,8 +358,6 @@ for i in range(len(means)):
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
 plt.ylim([0, 100])
-plt.legend(bbox_to_anchor=(1.2, 1.0))
-plt.tight_layout()
 
 plt.savefig("Results/std_double.png")
 plt.show()

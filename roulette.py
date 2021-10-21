@@ -15,7 +15,6 @@ terminal_states = [1]
 def is_terminal(state):
     return state in terminal_states
 
-
 def my_arg_max(actions):
     arg_max = [0]
     value = actions[0]
@@ -30,13 +29,12 @@ def my_arg_max(actions):
 
     return np.random.choice(arg_max)
 
-
 def initial_Q(possible_actions):
     return [[0 for _ in possible_actions[i]] for i in range(len(possible_actions))]
 
-
 def make_transition(state, action):
-    max_move = 10
+    max_move = 36
+
     if state == 0 and action == max_move:
         return 0, 1
 
@@ -46,23 +44,13 @@ def make_transition(state, action):
         throw = np.random.randint(0, max_move)
 
         if throw == action:
-            return max_move-2, 0
+            return max_move, 0
 
         return -1, 0
 
     # If a move is made from any other state, nothing happens
     return 0, state
 
-
-# loops = 10000
-# for a in range(10):
-#     reward = 0
-#     for i in range(loops):
-#         r, _ = make_transition(0, a)
-
-#         reward += r
-
-#     print(f"action: {a} => {reward/loops}")
 
 # %%
 
@@ -75,8 +63,7 @@ def make_transition(state, action):
 # %%
 # Update Q-values
 
-gamma = 0.9
-
+gamma = 0.95
 
 class SingleQ():
 
@@ -91,7 +78,7 @@ class SingleQ():
             return my_arg_max(self.Q[state])
 
     def getMaxQ(self, state):
-        best_move = my_arg_max(self.Q[state])
+        best_move = np.argmax(np.array(self.Q[state]))
 
         return best_move, self.Q[state][best_move]
 
@@ -103,7 +90,6 @@ class SingleQ():
             (reward + gamma * next_value - self.Q[state][action])
 
 # %%
-
 
 class DoubleQ():
 
@@ -138,7 +124,7 @@ class DoubleQ():
 
 # %%
 
-
+# %%
 def single_experiment(possible_actions, episodes, std=1, doubleQ=False):
     if doubleQ:
         learner = DoubleQ(initial_Q(possible_actions),
@@ -147,10 +133,11 @@ def single_experiment(possible_actions, episodes, std=1, doubleQ=False):
     else:
         learner = SingleQ(initial_Q(possible_actions))
 
-    payout = 0
     payouts = []
+    payout = 0
 
     episode_lengths = []
+    average_q_vals = []
 
     # number of states visited
     ns = [0 for _ in range(len(possible_actions))]
@@ -184,18 +171,22 @@ def single_experiment(possible_actions, episodes, std=1, doubleQ=False):
 
             # update Q-value
             learner.updateQ(state, action, reward, next_state, alpha)
-
+                  
             # break if a terminal state is reached
             if is_terminal(next_state):
                 episode_lengths.append(moves_count)
                 break
 
             state = next_state
-
+    
         # print(f"Q at {i}: {learner.Q}")
         payouts.append(payout)
+        if doubleQ:
+            average_q_vals.append(sum(learner.Q_a[0]) / len(learner.Q_a[0]))
+        else:
+            average_q_vals.append(sum(learner.Q[0]) / len(learner.Q[0]))
 
-    return payouts, episode_lengths
+    return payouts, episode_lengths, average_q_vals
 
 
 # %%
@@ -205,15 +196,17 @@ def experiment(num_experiments=500, episodes=300, std=1, doubleQ=False):
     final_res = [0 for i in range(episodes)]
     final_t = [0 for i in range(episodes)]
 
-    possible_actions = [list(range(11)), [0]]
+    possible_actions = [list(range(37)), [0]]
 
     first_count = []
+    total_average_q = []
 
     for i in range(num_experiments):
-        current_count, current_t = single_experiment(
+        current_count, current_t, average_q = single_experiment(
             possible_actions, episodes, std, doubleQ)
 
         first_count.append(current_t[0])
+        total_average_q.append(np.array(average_q))
         # break
 
         for e in range(episodes):
@@ -221,22 +214,22 @@ def experiment(num_experiments=500, episodes=300, std=1, doubleQ=False):
             final_res[e] = final_count[e] / (e+1) * 100
 
             final_t[e] = (final_t[e] * i + current_t[e]) / (i+1)
+    total_average_q = np.mean(np.array(total_average_q), axis=0)
+    return final_res, final_t, total_average_q
 
-    return final_res, final_t
 
-
-num_experiments = 10
-episodes = 100
-single_res, single_t = experiment(
+num_experiments = 1
+episodes = 1000
+single_res, single_t, single_average_q = experiment(
     episodes=episodes, num_experiments=num_experiments)
-double_res, double_t = experiment(
+double_res, double_t, double_average_q= experiment(
     episodes=episodes, num_experiments=num_experiments, doubleQ=True)
 
-plt.plot(range(len(single_res)), single_t, label="single")
-plt.plot(range(len(double_res)), double_t, label="double")
+plt.plot(range(len(single_res)), single_average_q, label="single")
+plt.plot(range(len(double_res)), double_average_q, label="double")
 plt.legend()
 plt.xlabel("episodes")
-plt.ylabel("percentage left")
+plt.ylabel("expected profit")
 
 # %%
 

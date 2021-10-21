@@ -210,12 +210,13 @@ def experiment(num_experiments=500, episodes=300, std=1, doubleQ=False):
             final_res[e] = final_count[e] / (e+1) * 100
 
             final_t[e] = (final_t[e] * i + current_t[e]) / (i+1)
+
     total_average_q = np.mean(np.array(total_average_q), axis=0)
     return final_res, final_t, total_average_q
 
 
 num_experiments = 20
-episodes = 100
+episodes = 10
 single_res, single_t, single_average_q = experiment(
     episodes=episodes, num_experiments=num_experiments)
 double_res, double_t, double_average_q = experiment(
@@ -223,6 +224,10 @@ double_res, double_t, double_average_q = experiment(
 
 plt.plot(range(len(single_res)), single_average_q, label="single")
 plt.plot(range(len(double_res)), double_average_q, label="double")
-plt.legend()
+
+plt.legend(bbox_to_anchor=(1.3, 1.0))
+plt.tight_layout()
 plt.xlabel("episodes")
 plt.ylabel("expected profit")
+
+# %%

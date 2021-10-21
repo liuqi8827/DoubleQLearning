@@ -2,6 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 # %%
 # Initial Values
@@ -123,7 +124,7 @@ def single_experiment(possible_actions, episodes, std=1, doubleQ=False):
         learner = SingleQ(initial_Q(possible_actions))
 
     left_count = 0
-    left_counts = []
+    left_freq = []
 
     # number of states visited
     ns = [0 for _ in range(len(possible_actions))]
@@ -162,9 +163,9 @@ def single_experiment(possible_actions, episodes, std=1, doubleQ=False):
 
             state = next_state
 
-        left_counts.append(left_count)
+        left_freq.append(left_count/i)
 
-    return left_counts
+    return left_freq
 
 
 # %%
@@ -173,19 +174,22 @@ def experiment(num_experiments=500, episodes=300, num_random_actions=5, std=1, d
     final_count = [0 for i in range(episodes)]
     final_res = [0 for i in range(episodes)]
 
+    final_freq = []
+
     possible_actions = [[0, 1], list(range(num_random_actions)), [0], [0]]
 
-    for i in range(num_experiments):
+    for i in tqdm(range(num_experiments)):
         np.random.seed(i)
 
-        current_count = single_experiment(
+        current_freq = single_experiment(
             possible_actions, episodes, std, doubleQ)
 
-        for e in range(episodes):
-            final_count[e] = (final_count[e] * i + current_count[e]) / (i+1)
-            final_res[e] = final_count[e] / (e+1) * 100
+        final_freq.append(current_freq)
+        # for e in range(episodes):
+        #     final_count[e] = (final_count[e] * i + current_count[e]) / (i+1)
+        #     final_res[e] = final_count[e] / (e+1) * 100
 
-    return final_res
+    return 100 * np.array(final_freq)
 
 
 num_random_actions = 5
@@ -194,25 +198,52 @@ single_res = experiment(num_random_actions=num_random_actions, std=std)
 double_res = experiment(
     num_random_actions=num_random_actions, std=std, doubleQ=True)
 
-plt.plot(range(len(single_res)), single_res, label="single")
-plt.plot(range(len(double_res)), double_res, label="double")
+
+# %%
+
+m = single_res.mean(axis=0)
+s = single_res.std(axis=0)
+
+plt.plot(range(len(single_res[0])), m, label="single")
+plt.fill_between(range(len(single_res[0])), m-s, m+s, alpha=0.25)
+
+m = double_res.mean(axis=0)
+s = double_res.std(axis=0)
+plt.plot(range(len(double_res[0])), m, label="double")
+plt.fill_between(range(len(single_res[0])), m-s, m+s, alpha=0.25)
+
 plt.legend()
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
 
 # %%
 
-# variables to change: std, number of actions
-
+################################################################################
 # Experiment 1: number of actions
-
+################################################################################
 # single
 
-for n in [1, 3, 5, 10, 20, 50, 100]:
+means = []
+stds = []
 
-    res = experiment(num_random_actions=n)
+tests = [1, 3, 5, 10, 20, 50, 100]
+for n in tests:
 
-    plt.plot(range(len(res)), res, label=n)
+    r = experiment(num_random_actions=n)
+    m = r.mean(axis=0)
+    s = r.std(axis=0)
+    means.append(m)
+    stds.append(s)
+
+
+# %%
+
+for i in range(len(means)):
+    m = means[i]
+    s = stds[i]/2
+
+    plt.plot(range(len(m)), m, label=tests[i], linewidth=2)
+    plt.fill_between(range(len(m)), m-s, m+s, alpha=0.2)
 
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
@@ -224,39 +255,72 @@ plt.savefig("Results/actions_single.png")
 plt.show()
 
 # %%
+################################################################################
+# Experiment 1: number of actions
+################################################################################
+
 # double
 
-for n in [1, 3, 5, 10, 20, 50, 100]:
+means = []
+stds = []
 
-    res = experiment(num_random_actions=n, doubleQ=True)
+tests = [1, 3, 5, 10, 20, 50, 100]
+for n in tests:
 
-    plt.plot(range(len(res)), res, label=n)
+    r = experiment(num_random_actions=n, doubleQ=True)
+    m = r.mean(axis=0)
+    s = r.std(axis=0)
+    means.append(m)
+    stds.append(s)
 
-plt.legend()
+# %%
+
+for i in range(len(means)):
+    m = means[i]
+    s = stds[i]/2
+
+    plt.plot(range(len(m)), m, label=tests[i], linewidth=2)
+    plt.fill_between(range(len(m)), m-s, m+s, alpha=0.2)
+
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
-
 plt.ylim([0, 100])
 plt.legend(bbox_to_anchor=(1.2, 1.0))
 plt.tight_layout()
 
 plt.savefig("Results/actions_double.png")
 plt.show()
+
 # %%
 
-# variables to change: std, number of actions
-
+################################################################################
 # Experiment 2: std
+################################################################################
+
 
 # single
 
-for s in [0, 0.5, 1, 2, 3, 5, 10]:
+means = []
+stds = []
 
-    res = experiment(std=s)
+tests = [0, 0.5, 1, 2, 3, 5, 10]
+for n in tests:
 
-    plt.plot(range(len(res)), res, label=s)
+    r = experiment(std=n)
+    m = r.mean(axis=0)
+    s = r.std(axis=0)
+    means.append(m)
+    stds.append(s)
+# %%
 
-plt.legend()
+
+for i in range(len(means)):
+    m = means[i]
+    s = stds[i]/2
+
+    plt.plot(range(len(m)), m, label=tests[i], linewidth=2)
+    plt.fill_between(range(len(m)), m-s, m+s, alpha=0.2)
+
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
 plt.ylim([0, 100])
@@ -265,21 +329,36 @@ plt.tight_layout()
 
 plt.savefig("Results/std_single.png")
 plt.show()
+
 # %%
-
-# variables to change: std, number of actions
-
+################################################################################
 # Experiment 2: std
+################################################################################
+
 
 # double
 
-for s in [0, 0.5, 1, 2, 3, 5, 10]:
 
-    res = experiment(std=s, doubleQ=True)
+means = []
+stds = []
 
-    plt.plot(range(len(res)), res, label=s)
+tests = [0, 0.5, 1, 2, 3, 5, 10]
+for n in tests:
 
-plt.legend()
+    r = experiment(std=n, doubleQ=True)
+    m = r.mean(axis=0)
+    s = r.std(axis=0)
+    means.append(m)
+    stds.append(s)
+# %%
+
+for i in range(len(means)):
+    m = means[i]
+    s = stds[i]/2
+
+    plt.plot(range(len(m)), m, label=tests[i], linewidth=2)
+    plt.fill_between(range(len(m)), m-s, m+s, alpha=0.2)
+
 plt.xlabel("episodes")
 plt.ylabel("percentage left")
 plt.ylim([0, 100])
@@ -288,6 +367,7 @@ plt.tight_layout()
 
 plt.savefig("Results/std_double.png")
 plt.show()
+
 # %%
 
 # Image David

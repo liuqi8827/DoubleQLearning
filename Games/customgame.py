@@ -23,12 +23,12 @@ class FirstGame(Env):
     """
 
     def __init__(self, num_actions):
-        self.nA = [2, 1, num_actions, 1]
+        self.nA = [2, num_actions, 1, 1]
         self.nS = 4
 
         self.transitions = {
-            0: {0: (1, (0.6, 0), True), 1: (2, (0, 0), False)},
-            2: {k: (3, (0.5, 1), True) for k in range(num_actions)}}
+            0: {0: (1, (0, 0), False), 1: (2, (0, 0), True)},
+            1: {k: (3, (-0.1, 1), True) for k in range(num_actions)}}
 
         self.s = 0
         self.is_done = False

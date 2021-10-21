@@ -116,6 +116,19 @@ class DoubleQ():
 
 
 def single_experiment(possible_actions, episodes, std=1, doubleQ=False):
+    """
+    This runs an experiment for a single seed.
+    We track number of states and state-action pairs visited for the adaptive epsilon and alpha.
+    Args:
+        possible_actions: list of possible actions (list(int))
+        episodes: number of episodes (int)
+        std: standard deviation (float)
+        doubleQ: whether to use double Q-learning instead of single (Bool)
+
+    Returns:
+        left_freq: the frequency of choosing the left action per episode (list(float))
+    """
+
     if doubleQ:
         learner = DoubleQ(initial_Q(possible_actions),
                           initial_Q(possible_actions))
@@ -171,6 +184,19 @@ def single_experiment(possible_actions, episodes, std=1, doubleQ=False):
 # %%
 
 def experiment(num_experiments=500, episodes=300, num_random_actions=5, std=1, doubleQ=False):
+    """ 
+    Runs an experiment N times, with a different seed each time.
+    Args:
+        num_experiments: number of experiments (int)
+        episodes: number of episodes per experiment (int)
+        num_random_actions: how many actions can be chosen in state B
+        std: standard deviation (float)
+        doubleQ: whether to use double Q-learning instead of single (Bool)
+
+    Returns:
+        final_freq: numpy array of size (num_experimentes x episodes), 
+            containing the frequency the left action is chosen for each experiment
+    """
     final_count = [0 for i in range(episodes)]
     final_res = [0 for i in range(episodes)]
 
@@ -201,7 +227,7 @@ double_res = experiment(episodes=50,
 
 
 # %%
-
+# Plot mean and standard deviation and save the image
 m = single_res.mean(axis=0)
 s = single_res.std(axis=0)
 
@@ -225,6 +251,8 @@ plt.show()
 ################################################################################
 # Experiment 1: number of actions
 ################################################################################
+# Vary the number of stochastic actions in the experiment.
+
 # single
 
 means = []
@@ -297,7 +325,7 @@ plt.show()
 ################################################################################
 # Experiment 2: std
 ################################################################################
-
+# Vary the standard deviation of the stochastic reward in each experiment
 
 # single
 

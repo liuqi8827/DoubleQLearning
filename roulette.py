@@ -10,13 +10,12 @@ terminal_states = [1]
 gamma = 0.95
 
 # %%
-# Create Q
-
 
 def is_terminal(state):
     return state in terminal_states
 
 
+# The builtin np.argmax always chooses the left-most value if there are multiple maxima, so we define a replacement
 def my_arg_max(actions):
     arg_max = [0]
     value = actions[0]
@@ -32,10 +31,12 @@ def my_arg_max(actions):
     return np.random.choice(arg_max)
 
 
+# Create Q
 def initial_Q(possible_actions):
     return [[0 for _ in possible_actions[i]] for i in range(len(possible_actions))]
 
 
+# Define the transitions of the environment
 def make_transition(state, action):
     max_move = 36
 
@@ -56,7 +57,7 @@ def make_transition(state, action):
     return 0, state
 
 # %%
-# Update Q-values
+# Single Q-learning
 
 
 class SingleQ():
@@ -85,7 +86,7 @@ class SingleQ():
 
 # %%
 
-
+# Double Q-learning
 class DoubleQ():
 
     def __init__(self, Q_a, Q_b):
@@ -120,7 +121,24 @@ class DoubleQ():
 # %%
 
 # %%
-def single_experiment(possible_actions, episodes, std=1, doubleQ=False):
+
+
+
+def single_experiment(possible_actions, episodes, doubleQ=False):
+    """
+    This runs an experiment for a single seed.
+    We track number of states and state-action pairs visited for the adaptive epsilon and alpha.
+    Args:
+        possible_actions: list of possible actions (list(int))
+        episodes: number of episodes (int)
+        std: standard deviation (float)
+        doubleQ: whether to use double Q-learning instead of single (Bool)
+
+    Returns:
+        payouts: list of payouts, i.e. return per episode (int)
+        episode_lenghts: list of episode lengths (int)
+        average_q_vals: list of the average q-value per episode (list(float))
+    """
     if doubleQ:
         learner = DoubleQ(initial_Q(possible_actions),
                           initial_Q(possible_actions))
@@ -186,7 +204,20 @@ def single_experiment(possible_actions, episodes, std=1, doubleQ=False):
 
 # %%
 
-def experiment(num_experiments=500, episodes=300, std=1, doubleQ=False):
+
+def experiment(num_experiments=500, episodes=300, doubleQ=False):
+    """ 
+    Runs an experiment N times, with a different seed each time.
+    Args:
+        num_experiments: number of experiments (int)
+        episodes: number of episodes per experiment (int)
+        std: standard deviation (float)
+        doubleQ: whether to use double Q-learning instead of single (Bool)
+
+    Returns:
+        final_res: numpy array of size (num_experimentes x episodes), 
+            containing the average q-values per episode for each experiment
+    """
     final_count = [0 for i in range(episodes)]
     final_res = [0 for i in range(episodes)]
     final_t = [0 for i in range(episodes)]
@@ -201,7 +232,7 @@ def experiment(num_experiments=500, episodes=300, std=1, doubleQ=False):
         np.random.seed(i)
         print(f"Starting exerperiment: {i}")
         current_count, current_t, average_q = single_experiment(
-            possible_actions, episodes, std, doubleQ)
+            possible_actions, episodes, doubleQ)
 
         first_count.append(current_t[0])
         final_res.append(np.array(average_q))
@@ -224,6 +255,7 @@ double_res = experiment(
     episodes=episodes, num_experiments=num_experiments, doubleQ=True)
 
 # %%
+# Plot average and standard deviation of the expected result for each episode for single and double q-learning
 
 m = single_res.mean(axis=0)
 s = single_res.std(axis=0)/2
@@ -249,6 +281,7 @@ plt.savefig("Results/roulette.png")
 
 # %%
 
+# Plot expected results for each episode separately for each seed.
 plt.plot(range(len(single_res)), single_res, label="single")
 plt.plot(range(len(double_res)), double_res, label="double")
 

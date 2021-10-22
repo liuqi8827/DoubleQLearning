@@ -3,12 +3,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import os
 
 # %%
 # Initial Values
 terminal_states = [1]
 gamma = 0.95
 
+# Ensure save folder for figures exist
+os.makedirs('Results', exist_ok=True)
 # %%
 
 def is_terminal(state):

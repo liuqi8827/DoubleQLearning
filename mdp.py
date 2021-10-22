@@ -3,12 +3,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import os
 
 # %%
 # Initial Values
 terminal_states = [2, 3]
 gamma = 0.95
 
+# Ensure save folder for figures exists
+os.makedirs('Results', exist_ok=True)
 
 # %%
 # Create Q
@@ -17,7 +20,7 @@ gamma = 0.95
 def is_terminal(state):
     return state in terminal_states
 
-
+# The builtin np.argmax always chooses the left-most value if there are multiple maxima, so we define a replacement
 def my_arg_max(actions):
     arg_max = [0]
     value = actions[0]
